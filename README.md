@@ -34,20 +34,20 @@ produces a 3D mask of the spleen (1 = spleen, 0 = background).
 |---|---|
 | **Task** | Medical Segmentation Decathlon (MSD), Task09: Spleen |
 | **Modality** | Portal venous phase CT |
-| **Size** | 61 3D volumes — **41 training** (with expert masks) + **20 test** (no masks) |
+| **Size** | 61 3D volumes: **41 training** (with expert masks) + **20 test** (no masks) |
 | **Source** | Memorial Sloan Kettering Cancer Center |
 | **Format** | NIfTI (`.nii.gz`), 512×512 axial slices |
 | **Licence** | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
-| **Download** | [medicaldecathlon.com](http://medicaldecathlon.com/) — or the MONAI mirror used by `download_data.py` (no registration needed) |
+| **Download** | [medicaldecathlon.com](http://medicaldecathlon.com/), or the MONAI mirror used by `download_data.py` (no registration needed) |
 
 Split used here (same as MONAI's official tutorial): 32 cases for training,
 9 cases for validation. Please cite the dataset as:
 Antonelli, M. et al. *The Medical Segmentation Decathlon.* Nature
-Communications 13, 4128 (2022) — https://arxiv.org/abs/1902.09063
+Communications 13, 4128 (2022), https://arxiv.org/abs/1902.09063
 
 ## Method
 
-- **Model:** 3D UNet — `channels=(16, 32, 64, 128, 256)`, `strides=(2, 2, 2, 2)`,
+- **Model:** 3D UNet: `channels=(16, 32, 64, 128, 256)`, `strides=(2, 2, 2, 2)`,
   `num_res_units=2`, batch normalisation. One input channel (CT), two output
   channels (background / spleen).
 - **Preprocessing:** Hounsfield-unit window `[-57, 164]` scaled to `[0, 1]`,
@@ -69,15 +69,22 @@ above 0.9 is considered excellent.
 | Run | Epochs | Validation Dice (mean, 9 cases) |
 |---|---|---|
 | MONAI official tutorial (`spleen_segmentation_3d.ipynb`) | 600 | **0.9510** (best, epoch 598) |
-| My run (fill in after training) | — | — |
+| My run | 100 | Unstable: 0.03-0.13 at most epochs, one spike to 0.58 at epoch 94 |
 
 > The 0.9510 figure is the result reported in MONAI's official tutorial, not
-> a result of this repo. My own result will be added to the table above after
-> a full training run.
+> a result of this repo.
+
+My 100-epoch run did not produce a stable validation score: Dice sat
+between 0.03 and 0.13 at almost every epoch, with a single spike to 0.58
+at epoch 94. A diagnostic run on one validation case traced the problem
+to a mismatch between the training patch size (96) and the validation
+window (160): the same case scored 0.66 with a 96 window and 0.17 with a
+160 window. I am now running the diagnostic over all 9 validation cases
+to get a trustworthy mean Dice before I report a number here.
 
 ## Quickstart
 
-### Option A — Google Colab (free GPU, recommended)
+### Option A: Google Colab (free GPU, recommended)
 
 ```python
 # 1. In Colab: Runtime -> Change runtime type -> T4 GPU
@@ -96,7 +103,7 @@ above 0.9 is considered excellent.
 !python train.py --data-dir data/Task09_Spleen --output-dir runs/spleen_unet
 ```
 
-### Option B — Local machine (needs a GPU for real training)
+### Option B: Local machine (needs a GPU for real training)
 
 ```bash
 git clone https://github.com/FaezeHajeb/MONAI-spleen-segmentation.git
@@ -147,5 +154,5 @@ MONAI-spleen-segmentation/
 ## Licence
 
 Code in this repository is released under the MIT licence. The MSD Spleen
-dataset is released under CC BY-SA 4.0 — please respect its licence and cite
+dataset is released under CC BY-SA 4.0. Please respect its licence and cite
 the Decathlon paper (see *Dataset* above) if you use it.
